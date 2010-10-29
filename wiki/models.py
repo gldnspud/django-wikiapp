@@ -17,6 +17,7 @@ from tagging.fields import TagField
 from tagging.models import Tag
 
 from wiki.utils import get_ct
+import wiki.settings
 
 try:
     from notification import models as notification
@@ -31,16 +32,6 @@ def diff(txt1, txt2):
     """Create a 'diff' from txt1 to txt2."""
     patch = dmp.patch_make(txt1, txt2)
     return dmp.patch_toText(patch)
-
-try:
-    markup_choices = settings.WIKI_MARKUP_CHOICES
-except AttributeError:
-    markup_choices = (
-        ('creole', _(u'Creole')),
-        ('restructuredtext', _(u'reStructuredText')),
-        ('textile', _(u'Textile')),
-        ('markdown', _(u'Markdown')),
-    )
 
 
 # Avoid boilerplate defining our own querysets
@@ -63,7 +54,7 @@ class Article(models.Model):
     summary = models.CharField(_(u"Summary"), max_length=150,
                                null=True, blank=True)
     markup = models.CharField(_(u"Content Markup"), max_length=20,
-                              choices=markup_choices,
+                              choices=wiki.settings.MARKUP_CHOICES,
                               null=True, blank=True)
     creator = models.ForeignKey(User, verbose_name=_('Article Creator'),
                                 null=True)
@@ -99,9 +90,9 @@ class Article(models.Model):
             return reverse('wiki_article', args=(self.title,))
         return self.group.get_absolute_url() + 'wiki/' + self.title
 
-    def save(self, force_insert=False, force_update=False):
+    def save(self, force_insert=False, force_update=False, *args, **kwargs):
         self.last_update = datetime.now()
-        super(Article, self).save(force_insert, force_update)
+        super(Article, self).save(force_insert, force_update, *args, **kwargs)
 
     def remove(self):
         """ Mark the Article as 'removed'. If the article is
@@ -181,7 +172,7 @@ class ChangeSet(models.Model):
     # How to recreate this version
     old_title = models.CharField(_(u"Old Title"), max_length=50, blank=True)
     old_markup = models.CharField(_(u"Article Content Markup"), max_length=20,
-                                  choices=markup_choices,
+                                  choices=wiki.settings.MARKUP_CHOICES,
                                   null=True, blank=True)
     content_diff = models.TextField(_(u"Content Patch"), blank=True)
 
@@ -266,7 +257,7 @@ class ChangeSet(models.Model):
             notification.send([self.editor], "wiki_revision_reverted",
                               {'revision': self, 'article': self.article})
 
-    def save(self, force_insert=False, force_update=False):
+    def save(self, force_insert=False, force_update=False, *args, **kwargs):
         """ Saves the article with a new revision.
         """
         if self.id is None:
@@ -275,7 +266,7 @@ class ChangeSet(models.Model):
                     article=self.article).latest().revision + 1
             except self.DoesNotExist:
                 self.revision = 1
-        super(ChangeSet, self).save(force_insert, force_update)
+        super(ChangeSet, self).save(force_insert, force_update, *args, **kwargs)
 
     def display_diff(self):
         ''' Returns a HTML representation of the diff.

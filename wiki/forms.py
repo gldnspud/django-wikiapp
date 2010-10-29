@@ -3,19 +3,14 @@ import re
 
 from django import forms
 from django.forms import widgets
-from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.utils.translation import ugettext_lazy as _
 
 from wiki.models import Article
-
-try:
-    WIKI_WORD_RE = settings.WIKI_WORD_RE
-except AttributeError:
-    WIKI_WORD_RE = r'(?:[A-Z]+[a-z]+){2,}'
+import wiki.settings
 
 
-wikiword_pattern = re.compile('^' + WIKI_WORD_RE + '$')
+wikiword_pattern = re.compile('^' + wiki.settings.WORD_RE + '$')
 
 
 class ArticleForm(forms.ModelForm):

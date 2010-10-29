@@ -21,15 +21,7 @@ from wiki.models import Article, ChangeSet
 from wiki.feeds import (RssArticleHistoryFeed, AtomArticleHistoryFeed,
                         RssHistoryFeed, AtomHistoryFeed)
 from wiki.utils import get_ct, login_required
-
-
-# Settings
-
-#  lock duration in minutes
-try:
-    WIKI_LOCK_DURATION = settings.WIKI_LOCK_DURATION
-except AttributeError:
-    WIKI_LOCK_DURATION = 15
+import wiki.settings
 
 try:
     from notification import models as notification
@@ -72,7 +64,7 @@ def get_url(urlname, group=None, args=None, kw=None, bridge=None):
         return reverse(urlname, args=args, kwargs=kw)
     else:
         return bridge.reverse(urlname, group, kwargs=kw)
-        
+
 
 class ArticleEditLock(object):
     """ A soft lock to edting an article.
@@ -89,7 +81,7 @@ class ArticleEditLock(object):
 
         self.message_template = message_template
 
-        cache.set(title, self, WIKI_LOCK_DURATION*60)
+        cache.set(title, self, wiki.settings.LOCK_DURATION*60)
 
     def create_message(self, request):
         """ Send a message to the user if there is another user
@@ -281,11 +273,11 @@ def edit_article(request, title,
                 form.group = group
 
             new_article, changeset = form.save()
-            
+
             url = get_url('wiki_article', group, kw={
                 'title': new_article.title,
             }, bridge=bridge)
-            
+
             return redirect_to(request, url)
 
     elif request.method == 'GET':
@@ -516,11 +508,11 @@ def revert_to_revision(request, title,
         if request.user.is_authenticated():
             request.user.message_set.create(
                 message=u"The article was reverted successfully.")
-                
+
         url = get_url('wiki_article_history', group, kw={
             'title': title,
         }, bridge=bridge)
-        
+
         return redirect_to(request, url)
 
     return HttpResponseNotAllowed(['POST'])
@@ -558,7 +550,7 @@ def search_article(request,
             url = get_url('wiki_article', group, kw={
                 'title': search_term,
             }, bridge=bridge)
-            
+
             return redirect_to(request, url)
 
     return HttpResponseNotAllowed(['POST'])
@@ -637,11 +629,11 @@ def observe_article(request, title,
 
         notification.observe(article, request.user,
                              'wiki_observed_article_changed')
-        
+
         url = get_url('wiki_article', group, kw={
             'title': article.title,
         }, bridge=bridge)
-        
+
         return redirect_to(request, url)
 
     return HttpResponseNotAllowed(['POST'])
@@ -679,11 +671,11 @@ def stop_observing_article(request, title,
         article = get_object_or_404(article_qs, **article_args)
 
         notification.stop_observing(article, request.user)
-        
+
         url = get_url('wiki_article', group, kw={
             'title': article.title,
         }, bridge=bridge)
-        
+
         return redirect_to(request, url)
     return HttpResponseNotAllowed(['POST'])
 

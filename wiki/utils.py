@@ -5,6 +5,8 @@ from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.auth.decorators import login_required as _login_required
 
+import wiki.settings
+
 
 def get_ct(obj):
     """ Return the ContentType of the object's model.
@@ -13,6 +15,6 @@ def get_ct(obj):
                                    model=obj._meta.module_name)
 
 def login_required(function):
-    if getattr(settings, 'WIKI_REQUIRES_LOGIN', False):
+    if wiki.settings.REQUIRES_LOGIN:
         return _login_required(function)
     return function
