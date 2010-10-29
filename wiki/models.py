@@ -62,7 +62,7 @@ class Article(models.Model):
     content = models.TextField(_(u"Content"))
     summary = models.CharField(_(u"Summary"), max_length=150,
                                null=True, blank=True)
-    markup = models.CharField(_(u"Content Markup"), max_length=3,
+    markup = models.CharField(_(u"Content Markup"), max_length=20,
                               choices=markup_choices,
                               null=True, blank=True)
     creator = models.ForeignKey(User, verbose_name=_('Article Creator'),
@@ -89,7 +89,7 @@ class Article(models.Model):
             if group is None:
                 return self.get(title=title)
             return group.get_related_objects(self.filter(title=title)).get()
-            
+
     class Meta:
         verbose_name = _(u'Article')
         verbose_name_plural = _(u'Articles')
@@ -180,7 +180,7 @@ class ChangeSet(models.Model):
 
     # How to recreate this version
     old_title = models.CharField(_(u"Old Title"), max_length=50, blank=True)
-    old_markup = models.CharField(_(u"Article Content Markup"), max_length=3,
+    old_markup = models.CharField(_(u"Article Content Markup"), max_length=20,
                                   choices=markup_choices,
                                   null=True, blank=True)
     content_diff = models.TextField(_(u"Content Patch"), blank=True)
