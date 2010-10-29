@@ -33,6 +33,18 @@ class ArticleForm(forms.ModelForm):
         model = Article
         exclude = ('creator', 'creator_ip', 'removed',
                    'group', 'created_at', 'last_update')
+        # Do not show markup choices if there's only one choice.
+        if len(wiki.settings.MARKUP_CHOICES) == 1:
+            widgets = {
+                'markup': forms.HiddenInput(),
+            }
+
+    def clean_markup(self):
+        """If only one markup choice, always set it automatically."""
+        if len(wiki.settings.MARKUP_CHOICES) == 1:
+            return wiki.settings.MARKUP_CHOICES[0][0]
+        else:
+            return self.cleaned_data['markup']
 
     def clean_title(self):
         """ Page title must be a WikiWord.
